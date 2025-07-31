@@ -1,4 +1,4 @@
-# main.py (Final Full Version)
+# main.py (for PythonAnywhere Deployment)
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
@@ -22,6 +22,7 @@ def search_book_logic(isbn: str):
     }
 
     try:
+        # PythonAnywhere는 IP 차단 가능성이 낮으므로, 프록시 없이 직접 요청
         response = requests.post(url, data=payload, headers=headers, timeout=20)
         response.raise_for_status()
         soup = BeautifulSoup(response.text, 'html.parser')
@@ -35,11 +36,8 @@ def search_book_logic(isbn: str):
 
         results = []
         for book in book_list:
-            # 소장도서관
-            library_element = book.select_one('dd.site > span:nth-of-type(1)')
-            library = library_element.get_text(strip=True).replace('도서관:', '').strip() if library_element else "정보 없음"
+            library = book.select_one('dd.site > span:nth-of-type(1)').get_text(strip=True).replace('도서관:', '').strip()
 
-            # 전체 청구기호
             call_no_full = "정보 없음"
             call_no_element = book.select_one('dd.data > span:nth-of-type(2)')
             if call_no_element:
@@ -49,10 +47,8 @@ def search_book_logic(isbn: str):
                 except IndexError:
                     call_no_full = call_no_text
             
-            # 기본 청구기호
             base_call_no = call_no_full.split('=')[0]
 
-            # 대출상태 및 반납예정일
             status = "알 수 없음"
             due_date = "-"
             status_text_element = book.select_one('div.bookStateBar p.txt')
@@ -85,16 +81,13 @@ def search_book_logic(isbn: str):
 
 
 # --- FastAPI 애플리케이션 생성 ---
+# PythonAnywhere에서는 이 파일을 직접 실행하지 않고, WSGI 파일이 이 'app' 객체를 임포트합니다.
 app = FastAPI()
 
 
 # --- API 엔드포인트 정의 ---
-
 @app.get("/search-book/{isbn}")
 async def search_by_isbn_endpoint(isbn: str):
-    """
-    ISBN을 받아 경기도 광주시 시립도서관의 도서 정보를 JSON 형태로 반환하는 API 엔드포인트.
-    """
     result = search_book_logic(isbn)
     if result is None:
         raise HTTPException(status_code=404, detail="해당 ISBN의 도서를 찾을 수 없습니다.")
@@ -103,8 +96,4 @@ async def search_by_isbn_endpoint(isbn: str):
 
 @app.get("/")
 async def health_check():
-    """
-    Uptime Robot과 같은 모니터링 서비스가 주기적으로 호출하여 
-    서버를 깨우는(spin down 방지) 용도의 헬스 체크 엔드포인트.
-    """
-    return {"status": "ok", "message": "Gyeonggi-do Gwangju City Library API is running!"}
+    return {"status": "ok", "message": "Gyeonggi-do Gwangju Library API is running!"}
