@@ -1,16 +1,20 @@
-# main.py (Final Version with Base Call Number)
+# main.py (Final Full Version)
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
 import requests
 from bs4 import BeautifulSoup
 
-# --- 핵심 로직 함수 ---
+# --- 핵심 로직 함수: ISBN으로 도서 정보를 크롤링 ---
 def search_book_logic(isbn: str):
     url = "https://lib.gjcity.go.kr:8443/kolaseek/plus/search/plusSearchResultList.do"
     payload = {
-        'searchType': 'DETAIL', 'searchKey5': 'ISBN', 'searchKeyword5': isbn,
-        'searchLibrary': 'ALL', 'searchSort': 'SIMILAR', 'searchRecordCount': '30'
+        'searchType': 'DETAIL',
+        'searchKey5': 'ISBN',
+        'searchKeyword5': isbn,
+        'searchLibrary': 'ALL',
+        'searchSort': 'SIMILAR',
+        'searchRecordCount': '30'
     }
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36',
@@ -31,8 +35,11 @@ def search_book_logic(isbn: str):
 
         results = []
         for book in book_list:
-            library = book.select_one('dd.site > span:nth-of-type(1)').get_text(strip=True).replace('도서관:', '').strip()
+            # 소장도서관
+            library_element = book.select_one('dd.site > span:nth-of-type(1)')
+            library = library_element.get_text(strip=True).replace('도서관:', '').strip() if library_element else "정보 없음"
 
+            # 전체 청구기호
             call_no_full = "정보 없음"
             call_no_element = book.select_one('dd.data > span:nth-of-type(2)')
             if call_no_element:
@@ -42,9 +49,10 @@ def search_book_logic(isbn: str):
                 except IndexError:
                     call_no_full = call_no_text
             
-            # --- [추가] 기본 청구기호 필드 생성 ---
+            # 기본 청구기호
             base_call_no = call_no_full.split('=')[0]
 
+            # 대출상태 및 반납예정일
             status = "알 수 없음"
             due_date = "-"
             status_text_element = book.select_one('div.bookStateBar p.txt')
@@ -62,8 +70,8 @@ def search_book_logic(isbn: str):
 
             results.append({
                 '소장도서관': library,
-                '청구기호': call_no_full,      # 전체 청구기호 (복본기호 포함)
-                '기본청구기호': base_call_no, # 기본 청구기호 (복본기호 제외)
+                '청구기호': call_no_full,
+                '기본청구기호': base_call_no,
                 '대출상태': status,
                 '반납예정일': due_date
             })
@@ -76,12 +84,27 @@ def search_book_logic(isbn: str):
         raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
 
 
-# FastAPI 앱 생성
+# --- FastAPI 애플리케이션 생성 ---
 app = FastAPI()
+
+
+# --- API 엔드포인트 정의 ---
 
 @app.get("/search-book/{isbn}")
 async def search_by_isbn_endpoint(isbn: str):
+    """
+    ISBN을 받아 경기도 광주시 시립도서관의 도서 정보를 JSON 형태로 반환하는 API 엔드포인트.
+    """
     result = search_book_logic(isbn)
     if result is None:
         raise HTTPException(status_code=404, detail="해당 ISBN의 도서를 찾을 수 없습니다.")
     return JSONResponse(content=result)
+
+
+@app.get("/")
+async def health_check():
+    """
+    Uptime Robot과 같은 모니터링 서비스가 주기적으로 호출하여 
+    서버를 깨우는(spin down 방지) 용도의 헬스 체크 엔드포인트.
+    """
+    return {"status": "ok", "message": "Gyeonggi-do Gwangju City Library API is running!"}
