@@ -1,4 +1,4 @@
-# 광주 시립도서관 도서 검색 API (Gwangju Library Book Availability API)
+# 경기도 광주 시립도서관 도서 검색 API (Gwangju Library Book Availability API)
 
 ![Python](https://img.shields.io/badge/Python-3.9%2B-blue)
 ![FastAPI](https://img.shields.io/badge/Framework-FastAPI-green)
@@ -6,7 +6,7 @@
 
 ## 📖 프로젝트 소개 (Overview)
 
-본 프로젝트는 **광주광역시 시립도서관**의 도서 소장 정보를 **ISBN**을 기반으로 조회할 수 있는 비공식 API 서버입니다.
+본 프로젝트는 **경기도 광주시 시립도서관**의 도서 소장 정보를 **ISBN**을 기반으로 조회할 수 있는 비공식 API 서버입니다.
 
 광주 시립도서관 웹사이트는 상세 검색 페이지에서 POST 요청을 통해서만 ISBN 검색을 지원합니다. 이 API는 해당 과정을 자동화하여, 간단한 GET 요청만으로 특정 도서의 소장 여부와 상세 정보를 JSON 형태로 쉽게 확인할 수 있도록 개발되었습니다.
 
