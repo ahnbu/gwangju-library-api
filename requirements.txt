@@ -1,4 +1,4 @@
-# requirements.txt
+# requirements.txt (Updated)
 
 fastapi
 uvicorn[standard]
@@ -6,3 +6,4 @@ requests
 beautifulsoup4
 pandas
 python-multipart
+gunicorn
