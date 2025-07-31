@@ -1,3 +1,12 @@
+네, 아주 좋은 생각입니다. API를 안정적으로 운영하기 위한 Uptime Robot 설정은 프로젝트의 완성도를 높이는 중요한 부분이므로, `README.md`에 포함하는 것이 매우 바람직합니다.
+
+프로젝트 배포 후 유지보수 단계까지 친절하게 안내하는 최종 `README.md` 파일을 작성해 드리겠습니다.
+
+---
+
+### 최종 `README.md` (Uptime Robot 가이드 포함)
+
+```markdown
 # 경기도 광주시 시립도서관 도서 검색 API (Gyeonggi-do Gwangju City Library API)
 
 ![Python](https://img.shields.io/badge/Python-3.9%2B-blue)
@@ -60,7 +69,9 @@ API는 도서의 기본 정보와 함께, 각 소장 도서관별 상세 정보�
       "반납예정일": "2025.08.09"
     }
   ]
-}```
+}
+```
+
 **필드 설명:**
 - `청구기호`: 도서관에서 책을 식별하는 완전한 고유 기호입니다. 동일한 책이 여러 권일 경우, `=` 뒤에 붙는 **복본기호**가 포함될 수 있습니다.
 - `기본청구기호`: 복본기호를 제외한 순수 청구기호입니다.
@@ -110,10 +121,9 @@ API는 도서의 기본 정보와 함께, 각 소장 도서관별 상세 정보�
     ```bash
     uvicorn main:app --reload
     ```
-    `--reload` 플래그는 코드가 변경될 때마다 서버를 자동으로 재시작해줍니다.
 
 5.  **API 테스트**
-    -   웹 브라우저에서 `http://127.0.0.1:8000/search-book/9791130629353` 로 접속하여 결과를 확인합니다.
+    -   웹 브라우저에서 `http://127.0.0.1:8000/search-book/9791130629353` 로 접속합니다.
     -   자동 생성된 API 문서는 `http://127.0.0.1:8000/docs` 에서 확인할 수 있습니다.
 
 ## ☁️ 배포하기 (Deployment)
@@ -134,6 +144,29 @@ API는 도서의 기본 정보와 함께, 각 소장 도서관별 상세 정보�
 
 3.  **배포 완료:** **[Create Web Service]**를 클릭하면 배포가 자동으로 시작됩니다. 몇 분 후 `https://your-service-name.onrender.com` 형태의 공개 URL이 생성됩니다.
 
+## 💡 서버 유지보수: Spin Down 방지하기 (Uptime Robot 설정)
+
+Render의 무료 요금제는 15분간 요청이 없으면 서버를 **슬립 모드(Spin Down)**로 전환합니다. 이 상태에서 다시 요청이 오면 서버가 깨어나는 데 30초 이상 소요될 수 있습니다. 이를 방지하고 API가 항상 즉시 응답하도록 설정합니다.
+
+### 1단계: 헬스 체크 엔드포인트 확인
+
+`main.py`에는 서버의 상태를 확인하는 가벼운 엔드포인트(`/`)가 이미 포함되어 있습니다. 이 주소로 주기적인 요청을 보내 서버를 깨워둘 것입니다.
+
+### 2단계: Uptime Robot 설정
+
+**Uptime Robot**은 지정된 URL을 주기적으로 호출해주는 무료 모니터링 서비스입니다.
+
+1.  [Uptime Robot 웹사이트](https://uptimerobot.com/)로 이동하여 무료 계정을 생성합니다.
+2.  로그인 후, 대시보드에서 **[+ Add New Monitor]** 버튼을 클릭합니다.
+3.  아래와 같이 모니터 설정을 입력합니다.
+    -   **Monitor Type**: `HTTP(S)`
+    -   **Friendly Name**: `My Gwangju Library API` (식별하기 쉬운 이름)
+    -   **URL or IP**: **Render에서 생성된 내 서비스의 기본 URL** (예: `https://gyeonggi-gwangju-library-api.onrender.com/`)
+    -   **Monitoring Interval**: `10 minutes` (15분보다 짧아야 합니다)
+4.  **[Create Monitor]** 버튼을 클릭하여 설정을 완료합니다.
+
+이제 Uptime Robot이 10분마다 API 서버를 호출하여, 서버가 잠들지 않고 항상 즉시 응답할 수 있도록 유지해줍니다.
+
 ## 📁 파일 구조 (File Structure)
 
 ```
@@ -146,3 +179,4 @@ API는 도서의 기본 정보와 함께, 각 소장 도서관별 상세 정보�
 ## 📄 라이선스 (License)
 
 이 프로젝트는 [MIT License](LICENSE)에 따라 배포됩니다.
+```
